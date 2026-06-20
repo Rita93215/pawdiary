@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F7F3EE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="筆記貓貓">
+<title>筆記貓貓</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   筆記貓貓 — style.css  v2 (Product-grade UI)
+   Warm milk-tea · iOS-inspired · Lucide Icons
+   ═══════════════════════════════════════════ */
+
+/* ── Design Tokens ── */
+:root {
+  --bg:           #F7F3EE;
+  --surface:      #FFFFFF;
+  --surface2:     #FAF7F3;
+  --surface3:     #F2EDE6;
+  --border:       #EAE4DA;
+  --border-lt:    #F0EBE3;
+
+  --primary:      #C8935A;
+  --primary-dk:   #9E6E3F;
+  --primary-lt:   #F5E9D8;
+  --primary-glow: rgba(200,147,90,.18);
+
+  --success:      #72A84A;
+  --success-lt:   #EEF6E6;
+  --warn:         #E8A030;
+  --warn-lt:      #FEF3E0;
+  --error:        #D94F4F;
+  --error-lt:     #FDEAEA;
+  --info:         #4A8FCC;
+  --info-lt:      #E6F2FB;
+
+  --text:         #2C1F14;
+  --text-2:       #7A6655;
+  --text-3:       #AFA095;
+  --text-inv:     #FFFFFF;
+
+  --r-sm:    8px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-pill: 999px;
+
+  --shadow-xs: 0 1px 4px rgba(44,31,20,.06);
+  --shadow-sm: 0 2px 12px rgba(44,31,20,.07);
+  --shadow-md: 0 4px 24px rgba(44,31,20,.08);
+  --shadow-lg: 0 8px 40px rgba(44,31,20,.10);
+
+  --nav-h:   62px;
+  --header-h: 72px;
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+
+  --font: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'PingFang TC', sans-serif;
+
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  --ease-out:    cubic-bezier(.16,1,.3,1);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select { font-family: inherit; font-size: 1rem; outline: none; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── App shell ── */
+#app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+  background: var(--bg);
+}
+
+/* ── Pages ── */
+.page {
+  display: none;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-top: var(--header-h);
+  padding-bottom: calc(var(--nav-h) + var(--safe-b) + 12px);
+  animation: pageFadeIn .22s var(--ease-out) forwards;
+}
+.page.active { display: flex; }
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Global Header (fixed, single brand) ── */
+#global-header {
+  position: fixed;
+  top: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: var(--header-h);
+  background: rgba(247,243,238,.94);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border-lt);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  z-index: 200;
+}
+.header-brand { flex: 1; }
+.header-brand-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.4px;
+  line-height: 1.15;
+}
+.header-brand-name span { color: var(--primary); }
+.header-brand-sub {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-3);
+  margin-top: 1px;
+  letter-spacing: .1px;
+}
+.header-actions { display: flex; gap: 8px; }
+.header-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border-lt);
+  transition: background .15s, transform .12s, box-shadow .15s;
+}
+.header-btn:active { transform: scale(.92); background: var(--primary-lt); }
+.header-btn svg { width: 17px; height: 17px; stroke-width: 2; }
+
+/* ── Bottom nav ── */
+#bottom-nav {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  height: calc(var(--nav-h) + var(--safe-b));
+  background: rgba(247,243,238,.96);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid var(--border-lt);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 6px;
+  z-index: 300;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  color: var(--text-3);
+  font-size: .62rem;
+  font-weight: 500;
+  letter-spacing: .2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .2s;
+  position: relative;
+}
+.nav-icon-wrap {
+  width: 42px; height: 28px;
+  border-radius: var(--r-pill);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s var(--ease-out), transform .15s var(--ease-spring);
+}
+.nav-item svg { width: 20px; height: 20px; stroke-width: 1.8; transition: stroke .2s; }
+.nav-item span { transition: color .2s; }
+.nav-item.active { color: var(--primary-dk); }
+.nav-item.active .nav-icon-wrap {
+  background: var(--primary-lt);
+}
+.nav-item.active svg { stroke: var(--primary-dk); }
+.nav-item:not(.active) svg { stroke: var(--text-3); }
+.nav-item:active .nav-icon-wrap { transform: scale(.88); }
+
+/* ── Scroll area ── */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1px solid rgba(234,228,218,.6);
+}
+.card-header {
+  padding: 16px 18px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-lt);
+}
+.card-title {
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  letter-spacing: -.1px;
+}
+.card-body { padding: 16px 18px; }
+
+/* ── Reminder chips ── */
+.remind-card {
+  border-radius: var(--r-lg);
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid transparent;
+}
+.remind-card.warn   { background: var(--warn-lt);    border-color: #F5D88A; }
+.remind-card.info   { background: var(--info-lt);    border-color: #B3D8F0; }
+.remind-card.urgent { background: var(--error-lt);   border-color: #F5B8B8; }
+.remind-card.success{ background: var(--success-lt); border-color: #C0DFA0; }
+.remind-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255,255,255,.7);
+}
+.remind-icon-wrap svg { width: 18px; height: 18px; stroke-width: 2; }
+.remind-card.warn   .remind-icon-wrap svg { stroke: var(--warn); }
+.remind-card.info   .remind-icon-wrap svg { stroke: var(--info); }
+.remind-card.urgent .remind-icon-wrap svg { stroke: var(--error); }
+.remind-card.success .remind-icon-wrap svg { stroke: var(--success); }
+.remind-text { flex: 1; }
+.remind-text strong { display: block; font-size: .86rem; font-weight: 600; color: var(--text); }
+.remind-text span   { font-size: .75rem; color: var(--text-2); margin-top: 1px; display: block; }
+
+/* ── Cat section card (Home) ── */
+.cat-section {
+  animation: cardIn .3s var(--ease-out) forwards;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cat-section-header {
+  padding: 18px 18px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--border-lt);
+}
+.cat-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--primary-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2.5px solid var(--surface);
+  box-shadow: 0 2px 8px rgba(200,147,90,.2);
+}
+.cat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cat-avatar-sm {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--primary-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(200,147,90,.15);
+}
+.cat-avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+
+.cat-name-block .name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+.cat-name-block .meta {
+  font-size: .73rem;
+  color: var(--text-3);
+  margin-top: 3px;
+  font-weight: 400;
+}
+.cat-name-block { flex: 1; }
+
+/* ── Timeline ── */
+.timeline {
+  padding: 4px 18px 8px;
+}
+.tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  position: relative;
+}
+.tl-line-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+.tl-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.tl-connector {
+  width: 1.5px;
+  flex: 1;
+  min-height: 16px;
+  background: var(--border);
+  margin-top: 4px;
+}
+.tl-item:last-child .tl-connector { display: none; }
+
+.tl-time {
+  font-size: .72rem;
+  color: var(--text-3);
+  width: 36px;
+  flex-shrink: 0;
+  padding-top: 3px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+.tl-content { flex: 1; padding-top: 1px; }
+.tl-label {
+  font-size: .875rem;
+  color: var(--text);
+  font-weight: 500;
+}
+.tl-note {
+  font-size: .73rem;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-weight: 400;
+}
+.tl-actions {
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity .15s;
+  padding-top: 2px;
+}
+.tl-item:hover .tl-actions { opacity: 1; }
+.tl-btn {
+  font-size: .7rem;
+  color: var(--text-3);
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: var(--surface2);
+  transition: background .12s, color .12s;
+  font-weight: 500;
+}
+.tl-btn:hover { background: var(--border); color: var(--text-2); }
+.tl-btn.del:hover { background: var(--error-lt); color: var(--error); }
+.tl-empty {
+  text-align: center;
+  color: var(--text-3);
+  font-size: .8rem;
+  padding: 20px 0 14px;
+  font-weight: 400;
+}
+
+/* ── Quick buttons ── */
+.quick-btns-wrap { padding: 12px 14px 16px; }
+.quick-btns-primary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.quick-btns-more {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-lt);
+  margin-top: 2px;
+  animation: expandIn .22s var(--ease-out) forwards;
+}
+.quick-btns-more.open { display: flex; }
+
+@keyframes expandIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.q-btn {
+  height: 40px;
+  padding: 0 15px;
+  border-radius: var(--r-pill);
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .05px;
+  background: var(--surface2);
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  transition: background .15s, border-color .15s, transform .1s var(--ease-spring), box-shadow .15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.q-btn:active { transform: scale(.93); }
+.q-btn.q-primary   { background: var(--primary-lt); color: var(--primary-dk); border-color: rgba(200,147,90,.3); }
+.q-btn.q-med       { background: #F0ECFF; color: #6B3FA0; border-color: #D8D0F5; }
+.q-btn.q-groom     { background: #EDFBF0; color: #2E7D50; border-color: #C0E8C8; }
+.q-btn.q-vet       { background: var(--error-lt); color: var(--error); border-color: #F5CCCC; }
+.q-btn.q-more {
+  background: var(--surface3);
+  color: var(--text-2);
+  border-color: var(--border);
+  display: flex; align-items: center; gap: 5px;
+}
+.q-btn.q-more svg { width: 13px; height: 13px; stroke-width: 2.2; transition: transform .22s var(--ease-spring); }
+.q-btn.q-more.open svg { transform: rotate(45deg); }
+
+.q-btn.active-flash {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  animation: btnFlash .35s var(--ease-spring) forwards;
+}
+@keyframes btnFlash {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(.9); }
+  70%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ── Cat switcher chips ── */
+.cat-switcher {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.cat-switcher::-webkit-scrollbar { display: none; }
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px 6px 7px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: all .15s;
+  box-shadow: var(--shadow-xs);
+}
+.cat-chip.cat-chip-all { padding: 6px 14px; }
+.cat-chip.active {
+  background: var(--primary-lt);
+  border-color: rgba(200,147,90,.5);
+  color: var(--primary-dk);
+}
+
+/* ── Section label ── */
+.section-label {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-3);
+  padding: 0 2px 10px;
+}
+
+/* ── Stats ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  border: 1px solid var(--border-lt);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: var(--shadow-xs);
+}
+.stat-icon-row {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.stat-icon-row svg { width: 18px; height: 18px; stroke-width: 2; }
+.stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.5px;
+}
+.stat-lbl { font-size: .75rem; color: var(--text-2); font-weight: 500; }
+.stat-sub { font-size: .68rem; color: var(--text-3); }
+
+/* ── Calendar ── */
+.cal-header {
+  display: flex;
+  align-items: center;
+  padding: 4px 0 16px;
+}
+.cal-month {
+  flex: 1;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+.cal-nav {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: background .12s;
+}
+.cal-nav svg { width: 18px; height: 18px; stroke-width: 2; }
+.cal-nav:hover { background: var(--surface2); }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow {
+  text-align: center;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--text-3);
+  padding: 4px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: .8rem;
+  cursor: pointer;
+  position: relative;
+  color: var(--text-2);
+  font-weight: 500;
+  transition: background .12s;
+}
+.cal-day:hover { background: var(--primary-lt); }
+.cal-day.today { background: var(--primary); color: #fff; font-weight: 700; }
+.cal-day.selected { background: var(--primary-dk); color: #fff; }
+.cal-day.has-records::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.cal-day.today::after,
+.cal-day.selected::after { background: rgba(255,255,255,.7); }
+.cal-day.other-month { color: var(--border); pointer-events: none; }
+
+/* ── Forms ── */
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-label { font-size: .78rem; font-weight: 600; color: var(--text-2); }
+.form-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: .9rem;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  background: var(--surface);
+}
+.form-input::placeholder { color: var(--text-3); }
+textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.55; }
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23AFA095' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-section { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0 22px;
+  border-radius: var(--r-pill);
+  font-size: .88rem;
+  font-weight: 600;
+  letter-spacing: .05px;
+  transition: all .15s;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(200,147,90,.3);
+}
+.btn-primary:hover { background: var(--primary-dk); box-shadow: 0 4px 16px rgba(200,147,90,.4); }
+.btn-primary:active { transform: scale(.97); }
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: var(--border); }
+.btn-danger { background: var(--error-lt); color: var(--error); border: 1.5px solid #F5CCCC; }
+.btn-danger:hover { background: #FACFCF; }
+.btn-ghost { color: var(--text-2); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-sm { height: 34px; padding: 0 14px; font-size: .77rem; }
+.btn-full { width: 100%; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(44,31,20,.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 500;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  width: 100%; max-width: 430px;
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  max-height: 92dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp .28s var(--ease-out) forwards;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); opacity: .8; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-handle {
+  width: 32px; height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 10px auto 2px;
+  flex-shrink: 0;
+}
+.modal-header {
+  padding: 6px 18px 14px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-lt);
+  flex-shrink: 0;
+}
+.modal-title { font-size: .98rem; font-weight: 700; flex: 1; color: var(--text); }
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text-3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem;
+  transition: background .12s;
+}
+.modal-close:hover { background: var(--border); }
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-footer {
+  padding: 12px 18px calc(12px + var(--safe-b));
+  border-top: 1px solid var(--border-lt);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Photo upload ── */
+.photo-upload {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: var(--primary-lt);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px dashed rgba(200,147,90,.4);
+  margin: 0 auto 6px;
+  transition: border-color .15s;
+}
+.photo-upload:hover { border-color: var(--primary); }
+.photo-upload img { width: 100%; height: 100%; object-fit: cover; }
+.photo-upload-icon { color: var(--primary); }
+.photo-upload-icon svg { width: 28px; height: 28px; stroke-width: 1.8; }
+.photo-upload-text { font-size: .62rem; color: var(--primary-dk); font-weight: 600; margin-top: 3px; }
+.photo-upload input[type="file"] { display: none; }
+
+/* ── Cat cards (管理頁) ── */
+.cat-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border-lt);
+  padding: 18px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: var(--shadow-xs);
+}
+.cat-card-av {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--primary-lt);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 3px 10px rgba(200,147,90,.2);
+  border: 3px solid var(--surface);
+}
+.cat-card-av img { width: 100%; height: 100%; object-fit: cover; }
+.cat-card-info { flex: 1; }
+.cat-card-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+.cat-card-meta { font-size: .76rem; color: var(--text-3); margin-top: 4px; line-height: 1.7; }
+.cat-card-actions { display: flex; gap: 7px; margin-top: 12px; flex-wrap: wrap; }
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 52px 24px;
+  text-align: center;
+}
+.empty-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.empty-icon svg { width: 30px; height: 30px; stroke-width: 1.5; stroke: var(--text-3); }
+.empty-title { font-size: .92rem; font-weight: 600; color: var(--text-2); }
+.empty-desc { font-size: .8rem; color: var(--text-3); max-width: 220px; line-height: 1.65; font-weight: 400; }
+
+/* ── Weight ── */
+.weight-chart-wrap { position: relative; width: 100%; height: 190px; }
+.weight-list { display: flex; flex-direction: column; }
+.weight-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  transition: background .12s;
+}
+.weight-item:hover { background: var(--surface2); }
+.weight-date { font-size: .76rem; color: var(--text-3); width: 96px; flex-shrink: 0; font-weight: 400; }
+.weight-val  { font-size: .92rem; font-weight: 700; color: var(--primary-dk); }
+.weight-diff { font-size: .7rem; margin-left: auto; font-weight: 600; }
+.weight-diff.up { color: var(--error); }
+.weight-diff.dn { color: var(--success); }
+.weight-diff.eq { color: var(--text-3); }
+
+/* ── Search ── */
+.search-input-wrap { position: relative; }
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.search-icon svg { width: 16px; height: 16px; stroke-width: 2; stroke: var(--text-3); }
+.search-input-wrap .form-input { padding-left: 38px; }
+
+/* ── Record items ── */
+.record-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-lt);
+}
+.record-item:last-child { border-bottom: none; }
+.record-type-badge {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: .71rem;
+  font-weight: 700;
+  background: var(--primary-lt);
+  color: var(--primary-dk);
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+}
+.record-meta { flex: 1; }
+.record-cat  { font-size: .82rem; font-weight: 600; color: var(--text); }
+.record-time { font-size: .72rem; color: var(--text-3); margin-top: 2px; }
+.record-note { font-size: .76rem; color: var(--text-2); margin-top: 3px; }
+
+/* ── Settings ── */
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-lt);
+  cursor: pointer;
+  transition: background .12s;
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-item:hover { background: var(--surface2); }
+.setting-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.setting-icon svg { width: 18px; height: 18px; stroke-width: 2; }
+.setting-text { flex: 1; }
+.setting-title { font-size: .88rem; font-weight: 600; color: var(--text); }
+.setting-desc  { font-size: .73rem; color: var(--text-3); margin-top: 1px; font-weight: 400; }
+.setting-arrow { color: var(--border); }
+.setting-arrow svg { width: 16px; height: 16px; stroke-width: 2.5; }
+
+/* ── Period tabs ── */
+.period-tabs {
+  display: flex;
+  background: var(--surface2);
+  border-radius: var(--r-pill);
+  padding: 3px;
+  border: 1px solid var(--border-lt);
+}
+.period-tab {
+  flex: 1;
+  height: 34px;
+  border-radius: var(--r-pill);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--text-3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .18s var(--ease-out);
+}
+.period-tab.active {
+  background: var(--surface);
+  color: var(--primary-dk);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ── Filter pills ── */
+.filter-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+.filter-pill {
+  padding: 5px 13px;
+  border-radius: var(--r-pill);
+  font-size: .75rem;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all .12s;
+}
+.filter-pill.active { background: var(--primary-lt); border-color: rgba(200,147,90,.5); color: var(--primary-dk); }
+
+/* ── Report ── */
+.report-cat-block {
+  background: var(--surface2);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid var(--border-lt);
+}
+.report-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .84rem;
+}
+.report-row span:first-child { color: var(--text-2); font-weight: 400; }
+.report-row span:last-child  { font-weight: 700; color: var(--text); }
+
+/* ── Toast ── */
+#toast-wrap {
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px); max-width: 398px;
+  z-index: 900;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 11px 16px;
+  border-radius: var(--r-md);
+  background: rgba(44,31,20,.88);
+  color: #fff;
+  font-size: .83rem;
+  font-weight: 500;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; gap: 8px;
+  animation: toastIn .2s var(--ease-out) forwards;
+}
+.toast svg { width: 15px; height: 15px; stroke-width: 2.2; flex-shrink: 0; }
+.toast.success { background: rgba(94,158,60,.9); }
+.toast.error   { background: rgba(210,64,64,.9); }
+.toast.warn    { background: rgba(220,148,30,.9); }
+@keyframes toastIn  { from { opacity:0; transform:translateY(-10px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-8px); } }
+
+/* ── Utility ── */
+.flex  { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.w-full { width: 100%; }
+.flex-1 { flex: 1; }
+.text-sm  { font-size: .82rem; }
+.text-xs  { font-size: .73rem; }
+.text-muted { color: var(--text-3); }
+.font-bold  { font-weight: 700; }
+.hidden { display: none !important; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+
+/* ── Report canvas ── */
+#report-canvas-holder { position: fixed; left: -9999px; top: 0; }
+
+/* ── Responsive ── */
+@media (min-width: 430px) {
+  #app { box-shadow: 0 0 80px rgba(0,0,0,.07); }
+  .modal { border-radius: var(--r-xl); max-width: 420px; }
+  .modal-overlay { align-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TOAST -->
+<div id="toast-wrap"></div>
+
+<!-- GLOBAL HEADER -->
+<header id="global-header">
+  <div class="header-brand">
+    <div class="header-brand-name">🐱 筆記<span>貓貓</span></div>
+    <div class="header-brand-sub">記錄寶貝的每一天</div>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" id="btn-add-record-top" title="新增紀錄">
+      <i data-lucide="plus"></i>
+    </button>
+    <button class="header-btn" id="btn-header-more" title="更多">
+      <i data-lucide="ellipsis"></i>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ PAGE: HOME ═══ -->
+<div id="page-home" class="page active">
+  <div class="scroll-area">
+    <div id="remind-section"></div>
+    <div id="home-timelines"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: CALENDAR ═══ -->
+<div id="page-cal" class="page">
+  <div class="scroll-area">
+    <div class="card">
+      <div class="card-body">
+        <div class="cal-header">
+          <button class="cal-nav" id="cal-prev"><i data-lucide="chevron-left"></i></button>
+          <div class="cal-month" id="cal-month-label"></div>
+          <button class="cal-nav" id="cal-next"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="cal-grid" id="cal-dow"></div>
+        <div class="cal-grid" id="cal-days"></div>
+      </div>
+    </div>
+    <div class="card" id="cal-day-detail" style="display:none">
+      <div class="card-header">
+        <span class="card-title" id="cal-detail-title">詳細紀錄</span>
+      </div>
+      <div class="card-body" id="cal-detail-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: STATS ═══ -->
+<div id="page-stats" class="page">
+  <div class="scroll-area">
+    <div class="cat-switcher" id="stats-cat-switcher"></div>
+    <div class="period-tabs">
+      <div class="period-tab active" data-period="week">本週</div>
+      <div class="period-tab" data-period="month">本月</div>
+    </div>
+    <div class="stat-grid" id="stats-grid"></div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">體重趨勢</span></div>
+      <div class="card-body">
+        <div class="weight-chart-wrap"><canvas id="weight-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">月報</span>
+        <select class="form-input btn-sm" id="report-month-sel" style="width:auto;height:32px;padding:0 28px 0 10px;font-size:.76rem;border-radius:20px;"></select>
+      </div>
+      <div class="card-body" id="report-body"></div>
+      <div style="padding:0 18px 16px;display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm flex-1" id="btn-export-png">匯出 PNG</button>
+        <button class="btn btn-secondary btn-sm flex-1" id="btn-export-pdf">匯出 PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: CATS ═══ -->
+<div id="page-cats" class="page">
+  <div style="padding:16px 16px 0;display:flex;justify-content:flex-end;">
+    <button class="btn btn-primary btn-sm" id="btn-add-cat" style="gap:6px;">
+      <i data-lucide="plus"></i> 新增貓咪
+    </button>
+  </div>
+  <div class="scroll-area" id="cats-list"></div>
+</div>
+
+<!-- ═══ PAGE: SETTINGS ═══ -->
+<div id="page-settings" class="page">
+  <div class="scroll-area">
+    <!-- Search -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">搜尋紀錄</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">開始日期</label>
+            <input type="date" class="form-input" id="search-date-from">
+          </div>
+          <div class="form-group">
+            <label class="form-label">結束日期</label>
+            <input type="date" class="form-input" id="search-date-to">
+          </div>
+        </div>
+        <div class="filter-pills" id="search-type-pills"></div>
+        <div class="form-group">
+          <div class="search-input-wrap">
+            <span class="search-icon"><i data-lucide="search"></i></span>
+            <input type="text" class="form-input" id="search-keyword" placeholder="關鍵字搜尋…">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-search">搜尋</button>
+      </div>
+    </div>
+    <div id="search-results"></div>
+
+    <!-- Backup -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">備份與還原</span></div>
+      <div>
+        <div class="setting-item" id="btn-backup-all">
+          <div class="setting-icon" style="background:#EDFBF0;"><i data-lucide="package" style="stroke:#2E7D50"></i></div>
+          <div class="setting-text"><div class="setting-title">全部備份</div><div class="setting-desc">匯出所有資料為 JSON</div></div>
+          <span class="setting-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="setting-item" id="btn-backup-range">
+          <div class="setting-icon" style="background:#E6F2FB;"><i data-lucide="calendar-range" style="stroke:#4A8FCC"></i></div>
+          <div class="setting-text"><div class="setting-title">日期區間備份</div><div class="setting-desc">選擇開始與結束日期</div></div>
+          <span class="setting-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="setting-item" id="btn-backup-month">
+          <div class="setting-icon" style="background:#FEF3E0;"><i data-lucide="calendar" style="stroke:#E8A030"></i></div>
+          <div class="setting-text"><div class="setting-title">月份備份</div><div class="setting-desc">選擇特定月份匯出</div></div>
+          <span class="setting-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="setting-item" id="btn-backup-cat">
+          <div class="setting-icon" style="background:#F5E9D8;"><i data-lucide="heart" style="stroke:#C8935A"></i></div>
+          <div class="setting-text"><div class="setting-title">依貓咪備份</div><div class="setting-desc">選擇單隻或多隻貓咪</div></div>
+          <span class="setting-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+        <div class="setting-item" id="btn-restore">
+          <div class="setting-icon" style="background:#F0ECFF;"><i data-lucide="refresh-cw" style="stroke:#6B3FA0"></i></div>
+          <div class="setting-text"><div class="setting-title">還原資料</div><div class="setting-desc">匯入 JSON 備份檔</div></div>
+          <span class="setting-arrow"><i data-lucide="chevron-right"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weight -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">體重紀錄</span>
+        <button class="btn btn-primary btn-sm" id="btn-add-weight">新增</button>
+      </div>
+      <div class="card-body" style="padding-top:8px;">
+        <div class="cat-switcher" id="weight-cat-switcher" style="margin-bottom:12px;"></div>
+        <div id="weight-list"></div>
+      </div>
+    </div>
+
+    <!-- Reminders -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">提醒設定</span></div>
+      <div id="reminder-settings-list"></div>
+    </div>
+
+    <div style="height:4px;"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <div class="nav-item active" data-page="home">
+    <div class="nav-icon-wrap"><i data-lucide="house"></i></div>
+    <span>首頁</span>
+  </div>
+  <div class="nav-item" data-page="cal">
+    <div class="nav-icon-wrap"><i data-lucide="calendar"></i></div>
+    <span>月曆</span>
+  </div>
+  <div class="nav-item" data-page="stats">
+    <div class="nav-icon-wrap"><i data-lucide="chart-column"></i></div>
+    <span>統計</span>
+  </div>
+  <div class="nav-item" data-page="cats">
+    <div class="nav-icon-wrap"><i data-lucide="paw-print"></i></div>
+    <span>貓咪</span>
+  </div>
+  <div class="nav-item" data-page="settings">
+    <div class="nav-icon-wrap"><i data-lucide="settings"></i></div>
+    <span>設定</span>
+  </div>
+</nav>
+
+</div><!-- /#app -->
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- Add/Edit Cat -->
+<div class="modal-overlay" id="modal-cat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-cat-title">新增貓咪</span>
+      <button class="modal-close" data-close="modal-cat">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-upload" id="cat-photo-upload">
+        <span class="photo-upload-icon"><i data-lucide="camera"></i></span>
+        <span class="photo-upload-text">上傳照片</span>
+        <input type="file" id="cat-photo-input" accept="image/*">
+      </div>
+      <input type="hidden" id="cat-edit-id">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">名字 *</label>
+          <input type="text" class="form-input" id="cat-name" placeholder="例如：小橘">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">性別</label>
+            <select class="form-input" id="cat-gender">
+              <option value="">不填</option>
+              <option value="♂ 男">♂ 男</option>
+              <option value="♀ 女">♀ 女</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">生日</label>
+            <input type="date" class="form-input" id="cat-birthday">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">晶片號碼（選填）</label>
+          <input type="text" class="form-input" id="cat-chip" placeholder="15 碼晶片號碼">
+        </div>
+        <div class="form-group">
+          <label class="form-label">初始體重（kg）</label>
+          <input type="number" class="form-input" id="cat-weight" placeholder="例如：4.2" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <textarea class="form-input" id="cat-note" placeholder="過敏、疾病、個性…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-cat">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-save-cat">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Record -->
+<div class="modal-overlay" id="modal-record">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-record-title">新增紀錄</span>
+      <button class="modal-close" data-close="modal-record">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="record-edit-id">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">貓咪 *</label>
+          <select class="form-input" id="record-cat"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">類型 *</label>
+          <select class="form-input" id="record-type"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">日期 *</label>
+            <input type="date" class="form-input" id="record-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">時間 *</label>
+            <input type="time" class="form-input" id="record-time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <textarea class="form-input" id="record-note" placeholder="選填…" style="min-height:60px;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-record">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-save-record">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Weight -->
+<div class="modal-overlay" id="modal-weight">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-weight-title">新增體重</span>
+      <button class="modal-close" data-close="modal-weight">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="weight-edit-id">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">貓咪 *</label>
+          <select class="form-input" id="weight-cat"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">日期 *</label>
+            <input type="date" class="form-input" id="weight-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">時間</label>
+            <input type="time" class="form-input" id="weight-time">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">體重（kg）*</label>
+          <input type="number" class="form-input" id="weight-val" placeholder="例如：4.2" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註</label>
+          <input type="text" class="form-input" id="weight-note" placeholder="選填…">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-weight">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-save-weight">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder settings -->
+<div class="modal-overlay" id="modal-reminder">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-reminder-title">提醒設定</span>
+      <button class="modal-close" data-close="modal-reminder">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reminder-cat-id">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">餵飯時間</label>
+          <input type="time" class="form-input" id="remind-feed">
+        </div>
+        <div class="form-group">
+          <label class="form-label">吃藥時間</label>
+          <input type="time" class="form-input" id="remind-med">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">剪指甲週期（天）</label>
+            <input type="number" class="form-input" id="remind-nail" placeholder="30" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">最後剪指甲</label>
+            <input type="date" class="form-input" id="remind-nail-last">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">驅蟲週期（天）</label>
+            <input type="number" class="form-input" id="remind-deworm" placeholder="90" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">最後驅蟲</label>
+            <input type="date" class="form-input" id="remind-deworm-last">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">下次回診日期</label>
+          <input type="date" class="form-input" id="remind-vet">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-reminder">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-save-reminder">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup range -->
+<div class="modal-overlay" id="modal-backup-range">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">日期區間備份</span>
+      <button class="modal-close" data-close="modal-backup-range">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">開始日期</label>
+          <input type="date" class="form-input" id="backup-range-from">
+        </div>
+        <div class="form-group">
+          <label class="form-label">結束日期</label>
+          <input type="date" class="form-input" id="backup-range-to">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-backup-range">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-do-backup-range">匯出</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup month -->
+<div class="modal-overlay" id="modal-backup-month">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">月份備份</span>
+      <button class="modal-close" data-close="modal-backup-month">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">選擇月份</label>
+        <input type="month" class="form-input" id="backup-month-val">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-backup-month">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-do-backup-month">匯出</button>
+    </div>
+  </div>
+</div>
+
+<!-- Backup by cat -->
+<div class="modal-overlay" id="modal-backup-cat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">依貓咪備份</span>
+      <button class="modal-close" data-close="modal-backup-cat">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">選擇貓咪（可複選）</label>
+        <div id="backup-cat-list" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-backup-cat">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-do-backup-cat">匯出</button>
+    </div>
+  </div>
+</div>
+
+<!-- Restore -->
+<div class="modal-overlay" id="modal-restore">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">還原資料</span>
+      <button class="modal-close" data-close="modal-restore">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">選擇 JSON 備份檔</label>
+        <input type="file" class="form-input" id="restore-file" accept=".json" style="padding:9px;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">還原模式</label>
+        <select class="form-input" id="restore-mode">
+          <option value="merge">合併資料（保留現有）</option>
+          <option value="overwrite">覆蓋現有資料</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-restore">取消</button>
+      <button class="btn btn-primary flex-1" id="btn-do-restore">還原</button>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly prompt -->
+<div class="modal-overlay" id="modal-monthly-prompt">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="monthly-prompt-title">上月月報</span>
+      <button class="modal-close" data-close="modal-monthly-prompt">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-2);font-size:.88rem;line-height:1.75;" id="monthly-prompt-text"></p>
+    </div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn btn-primary btn-sm flex-1" id="prompt-export-png">匯出 PNG</button>
+      <button class="btn btn-secondary btn-sm flex-1" id="prompt-export-pdf">匯出 PDF</button>
+      <button class="btn btn-ghost btn-sm w-full" id="prompt-later">稍後提醒</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quick note -->
+<div class="modal-overlay" id="modal-quick-note">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="quick-note-title">新增備註</span>
+      <button class="modal-close" data-close="modal-quick-note">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">備註（選填）</label>
+        <textarea class="form-input" id="quick-note-input" placeholder="輸入備註…" style="min-height:72px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" id="quick-note-skip">跳過</button>
+      <button class="btn btn-primary flex-1" id="quick-note-save">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body" style="text-align:center;padding:28px 20px 16px;gap:10px;">
+      <div class="empty-icon" style="margin:0 auto 4px;" id="confirm-icon">
+        <i data-lucide="trash-2"></i>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);" id="confirm-title">確定要刪除？</div>
+      <div style="font-size:.84rem;color:var(--text-2);" id="confirm-msg">此操作無法復原</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary flex-1" data-close="modal-confirm">取消</button>
+      <button class="btn btn-danger flex-1" id="btn-confirm-ok">確定刪除</button>
+    </div>
+  </div>
+</div>
+
+<div id="report-canvas-holder"><canvas id="export-canvas"></canvas></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   貓咪照護紀錄系統 — app.js
+   Modules: DB · Utils · Nav · Home · Calendar
+            Stats · Cats · Settings · Backup
+   ═══════════════════════════════════════════ */
+
+'use strict';
+
+/* ─────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────── */
+const DB_NAME    = 'CatCareDB';
+const DB_VERSION = 1;
+const RECORD_TYPES = [
+  '吃飯','喝水','尿尿','大便','吃藥','梳毛','剪指甲','驅蟲','看醫生','其他'
+];
+const TYPE_CLASS = {
+  '吃藥':'q-med','梳毛':'q-groom','剪指甲':'q-groom','驅蟲':'q-groom',
+  '看醫生':'q-vet','體重':'q-weight'
+};
+
+/* ─────────────────────────────────────────
+   MODULE: DB
+───────────────────────────────────────── */
+const DB = (() => {
+  let _db = null;
+
+  function open() {
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        // cats store
+        if (!db.objectStoreNames.contains('cats')) {
+          const s = db.createObjectStore('cats', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('name', 'name', { unique: false });
+        }
+        // records store
+        if (!db.objectStoreNames.contains('records')) {
+          const s = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('catId',   'catId',   { unique: false });
+          s.createIndex('date',    'date',    { unique: false });
+          s.createIndex('type',    'type',    { unique: false });
+          s.createIndex('catDate', ['catId','date'], { unique: false });
+        }
+        // weights store
+        if (!db.objectStoreNames.contains('weights')) {
+          const s = db.createObjectStore('weights', { keyPath: 'id', autoIncrement: true });
+          s.createIndex('catId', 'catId', { unique: false });
+          s.createIndex('date',  'date',  { unique: false });
+        }
+        // reminders store
+        if (!db.objectStoreNames.contains('reminders')) {
+          db.createObjectStore('reminders', { keyPath: 'catId' });
+        }
+        // meta store
+        if (!db.objectStoreNames.contains('meta')) {
+          db.createObjectStore('meta', { keyPath: 'key' });
+        }
+      };
+      req.onsuccess = e => { _db = e.target.result; res(_db); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function tx(stores, mode = 'readonly') {
+    return _db.transaction(stores, mode);
+  }
+
+  function getAll(store) {
+    return new Promise((res, rej) => {
+      const r = tx(store).objectStore(store).getAll();
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function get(store, key) {
+    return new Promise((res, rej) => {
+      const r = tx(store).objectStore(store).get(key);
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function put(store, data) {
+    return new Promise((res, rej) => {
+      const t = tx(store, 'readwrite');
+      const r = t.objectStore(store).put(data);
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function del(store, key) {
+    return new Promise((res, rej) => {
+      const t = tx(store, 'readwrite');
+      const r = t.objectStore(store).delete(key);
+      r.onsuccess = () => res();
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function getByIndex(store, indexName, value) {
+    return new Promise((res, rej) => {
+      const idx = tx(store).objectStore(store).index(indexName);
+      const r = idx.getAll(value);
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  function getRange(store, indexName, lower, upper) {
+    return new Promise((res, rej) => {
+      const range = IDBKeyRange.bound(lower, upper);
+      const idx = tx(store).objectStore(store).index(indexName);
+      const r = idx.getAll(range);
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  return { open, get, getAll, put, del, getByIndex, getRange, tx };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: UTILS
+───────────────────────────────────────── */
+const Utils = (() => {
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function nowTime() {
+    const d = new Date();
+    return d.toTimeString().slice(0, 5);
+  }
+  function fmtDate(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    return `${y}/${m}/${day}`;
+  }
+  function fmtTime(t) { return t || ''; }
+  function fmtDateTime(date, time) {
+    return `${fmtDate(date)} ${fmtTime(time)}`;
+  }
+  function calcAge(birthday) {
+    if (!birthday) return '';
+    const b = new Date(birthday), n = new Date();
+    let y = n.getFullYear() - b.getFullYear();
+    let m = n.getMonth()    - b.getMonth();
+    if (m < 0) { y--; m += 12; }
+    if (y > 0) return `${y} 歲 ${m} 個月`;
+    return `${m} 個月`;
+  }
+  function daysBetween(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr), n = new Date();
+    n.setHours(0,0,0,0); d.setHours(0,0,0,0);
+    return Math.round((d - n) / 86400000);
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  // Compress image to base64
+  function compressImage(file, maxW = 400, maxH = 400, quality = .75) {
+    return new Promise(res => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxW || h > maxH) {
+            const r = Math.min(maxW/w, maxH/h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          res(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function downloadJSON(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function downloadBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  return { today, nowTime, fmtDate, fmtTime, fmtDateTime, calcAge, daysBetween, uid, compressImage, downloadJSON, downloadBlob };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: TOAST
+───────────────────────────────────────── */
+const Toast = (() => {
+  const wrap = document.getElementById('toast-wrap');
+
+  const TOAST_ICONS = { success: 'check', error: 'x', warn: 'alert-triangle', '': 'info' };
+  function show(msg, type = '', duration = 2400) {
+    const el = document.createElement('div');
+    el.className = `toast${type ? ' ' + type : ''}`;
+    const icon = TOAST_ICONS[type] || 'info';
+    el.innerHTML = `<i data-lucide="${icon}"></i><span>${msg}</span>`;
+    wrap.appendChild(el);
+    if (window.lucide) lucide.createIcons({ nodes: [el] });
+    setTimeout(() => {
+      el.style.animation = 'toastOut .2s ease forwards';
+      setTimeout(() => el.remove(), 200);
+    }, duration);
+  }
+  return { show };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: MODAL
+───────────────────────────────────────── */
+const Modal = (() => {
+  function open(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('open');
+  }
+  function close(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  }
+  function closeAll() {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+
+  // Wire close buttons
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => close(btn.dataset.close));
+  });
+  // Close on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) close(overlay.id);
+    });
+  });
+
+  return { open, close, closeAll };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: CONFIRM
+───────────────────────────────────────── */
+const Confirm = (() => {
+  let _cb = null;
+
+  document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+    Modal.close('modal-confirm');
+    if (_cb) { _cb(); _cb = null; }
+  });
+
+  function show({ title = '確定要刪除？', msg = '此操作無法復原', icon = 'trash-2', cb }) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-msg').textContent = msg;
+    const iconEl = document.getElementById('confirm-icon');
+    iconEl.innerHTML = `<i data-lucide="${icon}"></i>`;
+    if (window.lucide) lucide.createIcons({ nodes: [iconEl] });
+    _cb = cb;
+    Modal.open('modal-confirm');
+  }
+  return { show };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: NAV
+───────────────────────────────────────── */
+const Nav = (() => {
+  const pages = document.querySelectorAll('.page');
+  const items  = document.querySelectorAll('.nav-item');
+
+  function goto(pageId) {
+    pages.forEach(p => p.classList.toggle('active', p.id === `page-${pageId}`));
+    items.forEach(i => i.classList.toggle('active', i.dataset.page === pageId));
+
+    // Refresh page on switch
+    if (pageId === 'home')     Home.refresh();
+    if (pageId === 'cal')      Cal.refresh();
+    if (pageId === 'stats')    Stats.refresh();
+    if (pageId === 'cats')     Cats.refresh();
+    if (pageId === 'settings') Settings.refresh();
+  }
+
+  items.forEach(item => {
+    item.addEventListener('click', () => goto(item.dataset.page));
+  });
+
+  return { goto };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: STATE (shared cache)
+───────────────────────────────────────── */
+const State = (() => {
+  let cats = [];
+  let reminders = {};
+
+  async function loadCats() {
+    cats = await DB.getAll('cats');
+    // Load reminders
+    const rs = await DB.getAll('reminders');
+    reminders = {};
+    rs.forEach(r => { reminders[r.catId] = r; });
+    return cats;
+  }
+
+  function getCats() { return cats; }
+  function getReminder(catId) { return reminders[catId] || {}; }
+  function getCatById(id) { return cats.find(c => c.id === id); }
+
+  function avatarEl(cat, size = 56, small = false) {
+    const div = document.createElement('div');
+    div.className = small ? 'cat-avatar-sm' : 'cat-avatar';
+    if (cat && cat.photo) {
+      const img = document.createElement('img');
+      img.src = cat.photo; img.alt = cat.name;
+      div.appendChild(img);
+    } else {
+      div.textContent = '🐱';
+    }
+    return div;
+  }
+
+  return { loadCats, getCats, getReminder, getCatById, avatarEl };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: HOME
+───────────────────────────────────────── */
+const Home = (() => {
+  let _pendingQuick = null; // { catId, type }
+
+  async function refresh() {
+    await State.loadCats();
+    renderReminders();
+    renderTimelines();
+  }
+
+  // ── Reminders ──
+  function renderReminders() {
+    const sec = document.getElementById('remind-section');
+    sec.innerHTML = '';
+    const cats = State.getCats();
+    if (!cats.length) return;
+
+    const cards = [];
+    const now = new Date();
+    const hhmm = now.toTimeString().slice(0,5);
+
+    cats.forEach(cat => {
+      const r = State.getReminder(cat.id);
+
+      // Feed time
+      if (r.feedTime) {
+        const diff = diffMinutes(hhmm, r.feedTime);
+        if (Math.abs(diff) <= 60) {
+          cards.push({ type: diff < 0 ? 'info' : 'warn', lucideIcon: 'utensils',
+            strong: `${cat.name} 餵飯提醒`,
+            text: diff < 0 ? `已過 ${-diff} 分鐘（${r.feedTime}）` : `還有 ${diff} 分鐘（${r.feedTime}）` });
+        }
+      }
+      // Med time
+      if (r.medTime) {
+        const diff = diffMinutes(hhmm, r.medTime);
+        if (Math.abs(diff) <= 60) {
+          cards.push({ type: 'urgent', lucideIcon: 'pill',
+            strong: `${cat.name} 吃藥提醒`,
+            text: diff < 0 ? `已過 ${-diff} 分鐘（${r.medTime}）` : `還有 ${diff} 分鐘（${r.medTime}）` });
+        }
+      }
+      // Nail
+      if (r.nailCycle && r.nailLast) {
+        const dueDate = addDays(r.nailLast, r.nailCycle);
+        const days = Utils.daysBetween(dueDate);
+        if (days !== null && days <= 7) {
+          cards.push({ type: days < 0 ? 'urgent' : days <= 3 ? 'warn' : 'info',
+            lucideIcon: 'scissors', strong: `${cat.name} 剪指甲`,
+            text: days < 0 ? `已超過 ${-days} 天` : days === 0 ? '今天需要剪' : `${days} 天後` });
+        }
+      }
+      // Deworm
+      if (r.dewormCycle && r.dewormLast) {
+        const dueDate = addDays(r.dewormLast, r.dewormCycle);
+        const days = Utils.daysBetween(dueDate);
+        if (days !== null && days <= 14) {
+          cards.push({ type: days < 0 ? 'urgent' : days <= 3 ? 'warn' : 'info',
+            lucideIcon: 'bug', strong: `${cat.name} 驅蟲`,
+            text: days < 0 ? `已超過 ${-days} 天` : days === 0 ? '今天需要驅蟲' : `${days} 天後` });
+        }
+      }
+      // Vet
+      if (r.vetDate) {
+        const days = Utils.daysBetween(r.vetDate);
+        if (days !== null && days <= 14) {
+          cards.push({ type: days < 0 ? 'urgent' : days <= 3 ? 'warn' : 'info',
+            lucideIcon: 'stethoscope', strong: `${cat.name} 回診`,
+            text: days < 0 ? `已過期 ${-days} 天` : days === 0 ? '今天回診' : `${days} 天後（${Utils.fmtDate(r.vetDate)}）` });
+        }
+      }
+    });
+
+    if (!cards.length) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    cards.forEach(c => {
+      const el = document.createElement('div');
+      el.className = `remind-card ${c.type}`;
+      el.innerHTML = `<div class="remind-icon-wrap"><i data-lucide="${c.lucideIcon||'bell'}"></i></div>
+        <div class="remind-text"><strong>${c.strong}</strong><span>${c.text}</span></div>`;
+      wrapper.appendChild(el);
+    });
+    sec.appendChild(wrapper);
+    if (window.lucide) lucide.createIcons({ nodes: [wrapper] });
+  }
+
+  function diffMinutes(a, b) {
+    const [ah, am] = a.split(':').map(Number);
+    const [bh, bm] = b.split(':').map(Number);
+    return (bh * 60 + bm) - (ah * 60 + am);
+  }
+  function addDays(dateStr, days) {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+
+  // ── Timelines ──
+  async function renderTimelines() {
+    const wrap = document.getElementById('home-timelines');
+    wrap.innerHTML = '';
+    const cats = State.getCats();
+    if (!cats.length) {
+      wrap.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><i data-lucide="paw-print"></i></div>
+        <div class="empty-title">尚未新增貓咪</div>
+        <div class="empty-desc">點擊右下角「貓咪」頁面新增你的第一隻寶貝！</div>
+      </div>`;
+      if (window.lucide) lucide.createIcons({ nodes: [wrap] });
+      return;
+    }
+
+    const todayStr = Utils.today();
+    // Get today's records
+    const records = await DB.getByIndex('records', 'date', todayStr);
+    const recordsByCat = {};
+    records.forEach(r => {
+      if (!recordsByCat[r.catId]) recordsByCat[r.catId] = [];
+      recordsByCat[r.catId].push(r);
+    });
+
+    for (const cat of cats) {
+      const card = buildCatSection(cat, recordsByCat[cat.id] || []);
+      wrap.appendChild(card);
+    }
+    if (window.lucide) lucide.createIcons({ nodes: [wrap] });
+  }
+
+  const PRIMARY_TYPES   = ['吃飯','喝水','尿尿','大便'];
+  const SECONDARY_TYPES = ['吃藥','梳毛','剪指甲','驅蟲','洗澡','看醫生','其他'];
+  const SEC_TYPE_CLASS  = { '吃藥':'q-med','梳毛':'q-groom','剪指甲':'q-groom','驅蟲':'q-groom','洗澡':'q-groom','看醫生':'q-vet' };
+
+  function buildCatSection(cat, records) {
+    records.sort((a, b) => a.time.localeCompare(b.time));
+
+    const card = document.createElement('div');
+    card.className = 'card cat-section';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'cat-section-header';
+    const av = State.avatarEl(cat, 56);
+    const nameBlock = document.createElement('div');
+    nameBlock.className = 'cat-name-block';
+    nameBlock.innerHTML = `<div class="name">${cat.name}</div>
+      <div class="meta">今天 ${records.length} 筆紀錄</div>`;
+    header.appendChild(av);
+    header.appendChild(nameBlock);
+    card.appendChild(header);
+
+    // Timeline
+    const tl = document.createElement('div');
+    tl.className = 'timeline';
+    if (records.length === 0) {
+      tl.innerHTML = `<div class="tl-empty">今天還沒有紀錄</div>`;
+    } else {
+      records.forEach((rec, i) => tl.appendChild(buildTlItem(rec, cat, i === records.length - 1)));
+    }
+    card.appendChild(tl);
+
+    // Quick buttons wrap
+    const qwrap = document.createElement('div');
+    qwrap.className = 'quick-btns-wrap';
+
+    // Primary row
+    const primary = document.createElement('div');
+    primary.className = 'quick-btns-primary';
+    PRIMARY_TYPES.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'q-btn q-primary';
+      btn.textContent = t;
+      btn.addEventListener('click', () => quickLog(cat.id, t, btn, card, tl, records));
+      primary.appendChild(btn);
+    });
+
+    // More button
+    const moreBtn = document.createElement('button');
+    moreBtn.className = 'q-btn q-more';
+    moreBtn.innerHTML = `更多 <i data-lucide="plus"></i>`;
+    if (window.lucide) lucide.createIcons({ nodes: [moreBtn] });
+
+    // Secondary row
+    const secondary = document.createElement('div');
+    secondary.className = 'quick-btns-more';
+    SECONDARY_TYPES.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = `q-btn${SEC_TYPE_CLASS[t] ? ' ' + SEC_TYPE_CLASS[t] : ''}`;
+      btn.textContent = t;
+      btn.addEventListener('click', () => quickLog(cat.id, t, btn, card, tl, records));
+      secondary.appendChild(btn);
+    });
+
+    moreBtn.addEventListener('click', () => {
+      secondary.classList.toggle('open');
+      moreBtn.classList.toggle('open');
+      if (window.lucide) lucide.createIcons({ nodes: [secondary] });
+    });
+
+    primary.appendChild(moreBtn);
+    qwrap.appendChild(primary);
+    qwrap.appendChild(secondary);
+    card.appendChild(qwrap);
+
+    return card;
+  }
+
+  function buildTlItem(rec, cat, isLast = false) {
+    const el = document.createElement('div');
+    el.className = 'tl-item';
+    el.dataset.id = rec.id;
+
+    const lineWrap = document.createElement('div');
+    lineWrap.className = 'tl-line-wrap';
+    const dot = document.createElement('div');
+    dot.className = 'tl-dot';
+    const connector = document.createElement('div');
+    connector.className = 'tl-connector';
+    lineWrap.appendChild(dot);
+    if (!isLast) lineWrap.appendChild(connector);
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'tl-time';
+    timeEl.textContent = rec.time;
+
+    const content = document.createElement('div');
+    content.className = 'tl-content';
+    content.innerHTML = `<div class="tl-label">${rec.type}</div>${rec.note ? `<div class="tl-note">${rec.note}</div>` : ''}`;
+
+    const actions = document.createElement('div');
+    actions.className = 'tl-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'tl-btn edit'; editBtn.textContent = '編輯';
+    const delBtn  = document.createElement('button');
+    delBtn.className  = 'tl-btn del'; delBtn.textContent = '刪除';
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
+    el.appendChild(lineWrap);
+    el.appendChild(timeEl);
+    el.appendChild(content);
+    el.appendChild(actions);
+
+    editBtn.addEventListener('click', () => Records.openEdit(rec.id));
+    delBtn.addEventListener('click', () => {
+      Confirm.show({ icon: 'trash-2', cb: async () => {
+        await DB.del('records', rec.id);
+        Toast.show('已刪除', 'success');
+        Home.refresh();
+      }});
+    });
+    return el;
+  }
+
+  async function quickLog(catId, type, btn, card, tl, records) {
+    const now = new Date();
+    const date = now.toISOString().slice(0,10);
+    const time = now.toTimeString().slice(0,5);
+
+    // Flash animation
+    btn.classList.add('active-flash');
+    setTimeout(() => btn.classList.remove('active-flash'), 450);
+
+    // For types that benefit from a note, show quick note modal
+    const noteTypes = ['吃藥','看醫生','其他'];
+    if (noteTypes.includes(type)) {
+      _pendingQuick = { catId, type, date, time };
+      document.getElementById('quick-note-title').textContent = `${type} — 新增備註`;
+      document.getElementById('quick-note-input').value = '';
+      Modal.open('modal-quick-note');
+      return;
+    }
+
+    const rec = { catId, type, date, time, note: '', createdAt: Date.now() };
+    const id = await DB.put('records', rec);
+    rec.id = id;
+    records.push(rec);
+    records.sort((a,b) => a.time.localeCompare(b.time));
+
+    // Update timeline
+    tl.innerHTML = '';
+    const cat = State.getCatById(catId);
+    records.forEach(r => tl.appendChild(buildTlItem(r, cat)));
+
+    // Update meta count
+    card.querySelector('.cat-name-block .meta').textContent = `今天 ${records.length} 筆紀錄`;
+
+    Toast.show(`✓ ${type}`, 'success', 1600);
+  }
+
+  // Quick note handlers
+  document.getElementById('quick-note-skip').addEventListener('click', async () => {
+    if (!_pendingQuick) { Modal.close('modal-quick-note'); return; }
+    const { catId, type, date, time } = _pendingQuick;
+    await DB.put('records', { catId, type, date, time, note: '', createdAt: Date.now() });
+    _pendingQuick = null;
+    Modal.close('modal-quick-note');
+    Toast.show(`✓ ${type}`, 'success', 1600);
+    Home.refresh();
+  });
+  document.getElementById('quick-note-save').addEventListener('click', async () => {
+    if (!_pendingQuick) { Modal.close('modal-quick-note'); return; }
+    const { catId, type, date, time } = _pendingQuick;
+    const note = document.getElementById('quick-note-input').value.trim();
+    await DB.put('records', { catId, type, date, time, note, createdAt: Date.now() });
+    _pendingQuick = null;
+    Modal.close('modal-quick-note');
+    Toast.show(`✓ ${type}`, 'success', 1600);
+    Home.refresh();
+  });
+
+  // Top add button
+  document.getElementById('btn-add-record-top').addEventListener('click', () => Records.openNew());
+  document.getElementById('btn-header-more').addEventListener('click', () => {
+    // Show a quick action sheet - go to cats page
+    Nav.goto('cats');
+  });
+
+  return { refresh };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: RECORDS (add/edit)
+───────────────────────────────────────── */
+const Records = (() => {
+  // Populate cat select
+  function populateCatSel(selId, selectedCatId = null) {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '';
+    State.getCats().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id; opt.textContent = cat.name;
+      if (selectedCatId && cat.id === selectedCatId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Populate type select
+  function populateTypeSel(selId, selected = '') {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '';
+    RECORD_TYPES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      if (t === selected) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function openNew(catId = null, type = null) {
+    document.getElementById('modal-record-title').textContent = '新增紀錄';
+    document.getElementById('record-edit-id').value = '';
+    populateCatSel('record-cat', catId || (State.getCats()[0]?.id));
+    populateTypeSel('record-type', type || RECORD_TYPES[0]);
+    document.getElementById('record-date').value = Utils.today();
+    document.getElementById('record-time').value = Utils.nowTime();
+    document.getElementById('record-note').value = '';
+    Modal.open('modal-record');
+  }
+
+  async function openEdit(id) {
+    const rec = await DB.get('records', id);
+    if (!rec) return;
+    document.getElementById('modal-record-title').textContent = '編輯紀錄';
+    document.getElementById('record-edit-id').value = rec.id;
+    populateCatSel('record-cat', rec.catId);
+    populateTypeSel('record-type', rec.type);
+    document.getElementById('record-date').value = rec.date;
+    document.getElementById('record-time').value = rec.time;
+    document.getElementById('record-note').value = rec.note || '';
+    Modal.open('modal-record');
+  }
+
+  document.getElementById('btn-save-record').addEventListener('click', async () => {
+    const id   = document.getElementById('record-edit-id').value;
+    const catId= parseInt(document.getElementById('record-cat').value);
+    const type = document.getElementById('record-type').value;
+    const date = document.getElementById('record-date').value;
+    const time = document.getElementById('record-time').value;
+    const note = document.getElementById('record-note').value.trim();
+
+    if (!catId || !type || !date || !time) {
+      Toast.show('請填寫必填欄位', 'error'); return;
+    }
+    const rec = { catId, type, date, time, note, createdAt: Date.now() };
+    if (id) rec.id = parseInt(id);
+
+    await DB.put('records', rec);
+    Modal.close('modal-record');
+    Toast.show(id ? '已更新' : '已新增', 'success');
+    Home.refresh();
+    if (document.getElementById('page-cal').classList.contains('active')) Cal.refresh();
+  });
+
+  return { openNew, openEdit };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: CALENDAR
+───────────────────────────────────────── */
+const Cal = (() => {
+  let _year, _month, _selected = null;
+
+  function refresh() {
+    const now = new Date();
+    if (!_year) { _year = now.getFullYear(); _month = now.getMonth(); }
+    renderCal();
+  }
+
+  async function renderCal() {
+    const now   = new Date();
+    const today = Utils.today();
+
+    // Label
+    document.getElementById('cal-month-label').textContent =
+      `${_year} 年 ${_month + 1} 月`;
+
+    // DOW headers
+    const dowEl = document.getElementById('cal-dow');
+    dowEl.innerHTML = '';
+    ['日','一','二','三','四','五','六'].forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow'; el.textContent = d;
+      dowEl.appendChild(el);
+    });
+
+    // Get all dates with records in this month
+    const fromDate = `${_year}-${String(_month+1).padStart(2,'0')}-01`;
+    const lastDay  = new Date(_year, _month+1, 0).getDate();
+    const toDate   = `${_year}-${String(_month+1).padStart(2,'0')}-${lastDay}`;
+    let monthRecords = [];
+    try { monthRecords = await DB.getRange('records', 'date', fromDate, toDate); } catch(e) {}
+    const datesWithRecords = new Set(monthRecords.map(r => r.date));
+
+    // Days grid
+    const daysEl = document.getElementById('cal-days');
+    daysEl.innerHTML = '';
+
+    const firstDay = new Date(_year, _month, 1).getDay();
+    const totalDays = new Date(_year, _month+1, 0).getDate();
+    const prevTotal = new Date(_year, _month, 0).getDate();
+
+    // Prev month padding
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const el = document.createElement('div');
+      el.className = 'cal-day other-month';
+      el.textContent = prevTotal - i;
+      daysEl.appendChild(el);
+    }
+
+    // Current month days
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${_year}-${String(_month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+      if (dateStr === today) el.classList.add('today');
+      if (datesWithRecords.has(dateStr)) el.classList.add('has-records');
+      if (dateStr === _selected) el.classList.add('selected');
+      el.addEventListener('click', () => selectDay(dateStr));
+      daysEl.appendChild(el);
+    }
+
+    // Next month padding
+    const filled = firstDay + totalDays;
+    const remain = filled % 7 === 0 ? 0 : 7 - (filled % 7);
+    for (let i = 1; i <= remain; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day other-month';
+      el.textContent = i;
+      daysEl.appendChild(el);
+    }
+  }
+
+  async function selectDay(dateStr) {
+    _selected = dateStr;
+    renderCal();
+
+    const records = await DB.getByIndex('records', 'date', dateStr);
+    const detail  = document.getElementById('cal-day-detail');
+    const title   = document.getElementById('cal-detail-title');
+    const body    = document.getElementById('cal-detail-body');
+
+    title.textContent = `${Utils.fmtDate(dateStr)} 的紀錄`;
+    body.innerHTML = '';
+    detail.style.display = 'block';
+
+    if (!records.length) {
+      body.innerHTML = `<div class="empty-state" style="padding:20px 0;">
+        <div class="empty-icon"><i data-lucide="notebook-pen"></i></div>
+        <div class="empty-title">這天沒有紀錄</div></div>`;
+      if (window.lucide) lucide.createIcons({ nodes: [body] });
+      return;
+    }
+
+    records.sort((a,b) => a.time.localeCompare(b.time));
+    const cats = State.getCats();
+    const catMap = {};
+    cats.forEach(c => { catMap[c.id] = c; });
+
+    // Group by cat
+    const byCat = {};
+    records.forEach(r => {
+      if (!byCat[r.catId]) byCat[r.catId] = [];
+      byCat[r.catId].push(r);
+    });
+
+    Object.entries(byCat).forEach(([catId, recs]) => {
+      const cat = catMap[parseInt(catId)];
+      if (!cat) return;
+      const sec = document.createElement('div');
+      sec.style.marginBottom = '12px';
+      sec.innerHTML = `<div class="section-label" style="margin-bottom:6px;">${cat.name}</div>`;
+      const tl = document.createElement('div');
+      tl.className = 'timeline';
+      recs.forEach((rec, i) => {
+        const isLast = i === recs.length - 1;
+        const item = document.createElement('div');
+        item.className = 'tl-item';
+        const lineWrap = document.createElement('div');
+        lineWrap.className = 'tl-line-wrap';
+        const dot = document.createElement('div'); dot.className = 'tl-dot';
+        lineWrap.appendChild(dot);
+        if (!isLast) { const conn = document.createElement('div'); conn.className = 'tl-connector'; lineWrap.appendChild(conn); }
+        const timeEl = document.createElement('div'); timeEl.className = 'tl-time'; timeEl.textContent = rec.time;
+        const cnt = document.createElement('div'); cnt.className = 'tl-content';
+        cnt.innerHTML = `<div class="tl-label">${rec.type}</div>${rec.note ? `<div class="tl-note">${rec.note}</div>` : ''}`;
+        const acts = document.createElement('div'); acts.className = 'tl-actions';
+        const eb = document.createElement('button'); eb.className = 'tl-btn edit'; eb.textContent = '編輯';
+        const db = document.createElement('button'); db.className = 'tl-btn del'; db.textContent = '刪除';
+        acts.appendChild(eb); acts.appendChild(db);
+        item.appendChild(lineWrap); item.appendChild(timeEl); item.appendChild(cnt); item.appendChild(acts);
+        eb.addEventListener('click', () => Records.openEdit(rec.id));
+        db.addEventListener('click', () => {
+          Confirm.show({ cb: async () => {
+            await DB.del('records', rec.id);
+            Toast.show('已刪除', 'success');
+            selectDay(dateStr);
+            renderCal();
+          }});
+        });
+        tl.appendChild(item);
+      });
+      sec.appendChild(tl);
+      body.appendChild(sec);
+    });
+  }
+
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    _month--; if (_month < 0) { _month = 11; _year--; }
+    _selected = null; renderCal();
+    document.getElementById('cal-day-detail').style.display = 'none';
+  });
+  document.getElementById('cal-next').addEventListener('click', () => {
+    _month++; if (_month > 11) { _month = 0; _year++; }
+    _selected = null; renderCal();
+    document.getElementById('cal-day-detail').style.display = 'none';
+  });
+
+  return { refresh };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: STATS
+───────────────────────────────────────── */
+const Stats = (() => {
+  let _selectedCatId = 'all';
+  let _period = 'week';
+  let _weightChart = null;
+  let _reportMonth = null;
+
+  async function refresh() {
+    await State.loadCats();
+    renderCatSwitcher();
+    await renderStats();
+    await renderWeight();
+    renderReportMonthSel();
+    await renderReport();
+  }
+
+  function renderCatSwitcher() {
+    const wrap = document.getElementById('stats-cat-switcher');
+    wrap.innerHTML = '';
+    const all = document.createElement('div');
+    all.className = `cat-chip cat-chip-all${_selectedCatId === 'all' ? ' active' : ''}`;
+    all.textContent = '全部';
+    all.addEventListener('click', () => { _selectedCatId = 'all'; renderCatSwitcher(); renderStats(); renderWeight(); });
+    wrap.appendChild(all);
+
+    State.getCats().forEach(cat => {
+      const chip = document.createElement('div');
+      chip.className = `cat-chip${_selectedCatId === cat.id ? ' active' : ''}`;
+      const av = document.createElement('div');
+      av.className = 'chip-av';
+      if (cat.photo) {
+        const img = document.createElement('img'); img.src = cat.photo;
+        av.appendChild(img);
+      } else { av.textContent = '🐱'; }
+      chip.appendChild(av);
+      chip.appendChild(document.createTextNode(cat.name));
+      chip.addEventListener('click', () => { _selectedCatId = cat.id; renderCatSwitcher(); renderStats(); renderWeight(); });
+      wrap.appendChild(chip);
+    });
+  }
+
+  async function renderStats() {
+    const now = new Date();
+    let from;
+    if (_period === 'week') {
+      const d = new Date(now);
+      d.setDate(d.getDate() - d.getDay());
+      from = d.toISOString().slice(0,10);
+    } else {
+      from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    }
+    const to = Utils.today();
+
+    let records;
+    try { records = await DB.getRange('records','date', from, to); } catch(e) { records = []; }
+
+    if (_selectedCatId !== 'all') {
+      records = records.filter(r => r.catId === _selectedCatId);
+    }
+
+    const counts = {};
+    ['吃飯','喝水','尿尿','大便'].forEach(t => {
+      counts[t] = records.filter(r => r.type === t).length;
+    });
+
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = '';
+    const STAT_ICONS = { '吃飯':'utensils','喝水':'droplets','尿尿':'circle-dot','大便':'leaf' };
+    const STAT_COLORS = { '吃飯':'#F5E9D8','喝水':'#E6F2FB','尿尿':'#EDFBF0','大便':'#FEF3E0' };
+    const STAT_STROKE = { '吃飯':'#C8935A','喝水':'#4A8FCC','尿尿':'#72A84A','大便':'#E8A030' };
+    [['吃飯'],['喝水'],['尿尿'],['大便']].forEach(([t]) => {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      card.innerHTML = `<div class="stat-icon-row" style="background:${STAT_COLORS[t]};"><i data-lucide="${STAT_ICONS[t]}" style="stroke:${STAT_STROKE[t]}"></i></div>
+        <div class="stat-num">${counts[t]}</div>
+        <div class="stat-lbl">${t}</div>
+        <div class="stat-sub">${_period === 'week' ? '本週' : '本月'}</div>`;
+      grid.appendChild(card);
+      if (window.lucide) lucide.createIcons({ nodes: [card] });
+    });
+  }
+
+  async function renderWeight() {
+    let weights;
+    try {
+      if (_selectedCatId !== 'all') {
+        weights = await DB.getByIndex('weights','catId', _selectedCatId);
+      } else {
+        weights = await DB.getAll('weights');
+      }
+    } catch(e) { weights = []; }
+    weights.sort((a,b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''));
+
+    const canvas = document.getElementById('weight-chart');
+    if (_weightChart) { _weightChart.destroy(); _weightChart = null; }
+
+    if (!weights.length) {
+      canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+      return;
+    }
+
+    const cats = State.getCats();
+    const catMap = {};
+    cats.forEach(c => { catMap[c.id] = c.name; });
+
+    // If single cat or all, group by cat for multi-line
+    const grouped = {};
+    weights.forEach(w => {
+      if (!grouped[w.catId]) grouped[w.catId] = [];
+      grouped[w.catId].push(w);
+    });
+
+    const colors = ['#D9A86C','#64B5F6','#8BC34A','#FFB74D','#EF5350','#CE93D8'];
+    const datasets = Object.entries(grouped).map(([catId, ws], i) => ({
+      label: catMap[parseInt(catId)] || `貓 ${catId}`,
+      data: ws.map(w => ({ x: w.date, y: parseFloat(w.weight) })),
+      borderColor: colors[i % colors.length],
+      backgroundColor: colors[i % colors.length] + '20',
+      tension: .35,
+      pointRadius: 4,
+      pointBackgroundColor: colors[i % colors.length],
+      fill: false,
+    }));
+
+    _weightChart = new Chart(canvas, {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 11 }, color: '#7A6250' }},
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y} kg` }}
+        },
+        scales: {
+          x: { type:'category', ticks: { color:'#A89280', font:{size:10} }, grid:{color:'#EDE8DF'} },
+          y: { ticks: { color:'#A89280', font:{size:10}, callback: v => v + 'kg' }, grid:{color:'#EDE8DF'} }
+        }
+      }
+    });
+  }
+
+  function renderReportMonthSel() {
+    const sel = document.getElementById('report-month-sel');
+    sel.innerHTML = '';
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = `${d.getFullYear()}年${d.getMonth()+1}月`;
+      sel.appendChild(opt);
+    }
+    if (!_reportMonth) _reportMonth = sel.value;
+    sel.value = _reportMonth;
+    sel.addEventListener('change', () => { _reportMonth = sel.value; renderReport(); });
+  }
+
+  async function renderReport() {
+    if (!_reportMonth) return;
+    const [y, m] = _reportMonth.split('-');
+    const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    const from = `${_reportMonth}-01`;
+    const to   = `${_reportMonth}-${String(lastDay).padStart(2,'0')}`;
+
+    let records, weights;
+    try { records = await DB.getRange('records','date', from, to); } catch(e) { records=[]; }
+    try { weights = await DB.getRange('weights','date', from, to); } catch(e) { weights=[]; }
+
+    const body = document.getElementById('report-body');
+    body.innerHTML = '';
+
+    const cats = State.getCats();
+    if (!cats.length) {
+      body.innerHTML = '<div class="text-sm text-muted" style="padding:8px 0;">尚無資料</div>';
+      return;
+    }
+
+    cats.forEach(cat => {
+      const recs = records.filter(r => r.catId === cat.id);
+      const ws   = weights.filter(w => w.catId === cat.id).sort((a,b)=>a.date.localeCompare(b.date));
+      const wt0  = ws[0]?.weight, wt1 = ws[ws.length-1]?.weight;
+      const wtChange = (wt0 && wt1) ? ((parseFloat(wt1) - parseFloat(wt0)).toFixed(2)) : null;
+
+      const block = document.createElement('div');
+      block.className = 'report-cat-block';
+      block.innerHTML = `
+        <div style="font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:4px;">${cat.name}</div>
+        ${[['吃飯','🍚'],['喝水','💧'],['尿尿','🚽'],['大便','💩'],['吃藥','💊'],['看醫生','🏥']].map(([t,i]) =>
+          `<div class="report-row"><span>${i} ${t}</span><span>${recs.filter(r=>r.type===t).length} 次</span></div>`
+        ).join('')}
+        ${wtChange !== null ? `<div class="report-row"><span>⚖️ 體重變化</span>
+          <span style="color:${parseFloat(wtChange)>0?'var(--error)':parseFloat(wtChange)<0?'var(--success)':'var(--text-3)'}">
+          ${parseFloat(wtChange)>0?'+':''}${wtChange} kg</span></div>` : ''}
+      `;
+      body.appendChild(block);
+    });
+  }
+
+  // Period tabs
+  document.querySelectorAll('.period-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      _period = tab.dataset.period;
+      renderStats();
+    });
+  });
+
+  // Export buttons
+  document.getElementById('btn-export-png').addEventListener('click', () => exportReport('png'));
+  document.getElementById('btn-export-pdf').addEventListener('click', () => exportReport('pdf'));
+  document.getElementById('prompt-export-png').addEventListener('click', () => exportReport('png'));
+  document.getElementById('prompt-export-pdf').addEventListener('click', () => exportReport('pdf'));
+
+  async function exportReport(format) {
+    const canvas = document.getElementById('export-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 800, H = 1000;
+    canvas.width = W; canvas.height = H;
+
+    // Background
+    ctx.fillStyle = '#FFFDF9';
+    ctx.fillRect(0,0,W,H);
+
+    // Header
+    ctx.fillStyle = '#D9A86C';
+    ctx.fillRect(0,0,W,80);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('貓咪照護月報', W/2, 52);
+
+    // Month label
+    ctx.fillStyle = '#A67C52';
+    ctx.font = '18px sans-serif';
+    ctx.fillText(_reportMonth ? _reportMonth.replace('-','年')+'月' : '', W/2, 108);
+
+    // Data
+    const [y, m] = (_reportMonth||'').split('-');
+    const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    const from = `${_reportMonth}-01`, to = `${_reportMonth}-${String(lastDay).padStart(2,'0')}`;
+    let records = [], weights = [];
+    try { records = await DB.getRange('records','date', from, to); } catch(e) {}
+    try { weights = await DB.getRange('weights','date', from, to); } catch(e) {}
+
+    const cats = State.getCats();
+    let y2 = 140;
+    ctx.textAlign = 'left';
+
+    cats.forEach(cat => {
+      const recs = records.filter(r => r.catId === cat.id);
+      ctx.fillStyle = '#3D2B1F';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(cat.name, 60, y2); y2 += 30;
+
+      [['吃飯','🍚'],['喝水','💧'],['尿尿','🚽'],['大便','💩']].forEach(([t]) => {
+        ctx.fillStyle = '#7A6250';
+        ctx.font = '14px sans-serif';
+        const cnt = recs.filter(r=>r.type===t).length;
+        ctx.fillText(`  ${t}: ${cnt} 次`, 60, y2);
+        y2 += 24;
+      });
+      y2 += 12;
+    });
+
+    // Footer
+    ctx.fillStyle = '#A89280';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`產生於 ${new Date().toLocaleDateString('zh-TW')}`, W/2, H - 20);
+
+    if (format === 'png') {
+      canvas.toBlob(blob => Utils.downloadBlob(blob, `貓咪月報_${_reportMonth}.png`));
+    } else {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'portrait', unit:'px', format:[W,H] });
+      pdf.addImage(canvas.toDataURL('image/jpeg', .9), 'JPEG', 0, 0, W, H);
+      pdf.save(`貓咪月報_${_reportMonth}.pdf`);
+    }
+    Toast.show('匯出成功！', 'success');
+  }
+
+  return { refresh, exportReport, getReportMonth: () => _reportMonth };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: CATS
+───────────────────────────────────────── */
+const Cats = (() => {
+  let _photoData = null;
+
+  async function refresh() {
+    await State.loadCats();
+    render();
+  }
+
+  function render() {
+    const list = document.getElementById('cats-list');
+    list.innerHTML = '';
+    const cats = State.getCats();
+    if (!cats.length) {
+      list.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><i data-lucide="heart"></i></div>
+        <div class="empty-title">還沒有貓咪</div>
+        <div class="empty-desc">點擊右上角「＋」新增你的第一隻貓咪！</div>
+      </div>`;
+      if (window.lucide) lucide.createIcons({ nodes: [list] });
+      return;
+    }
+    cats.forEach(cat => list.appendChild(buildCatCard(cat)));
+    if (window.lucide) lucide.createIcons({ nodes: [list] });
+  }
+
+  function buildCatCard(cat) {
+    const card = document.createElement('div');
+    card.className = 'cat-card';
+    const av = document.createElement('div');
+    av.className = 'cat-card-av';
+    if (cat.photo) {
+      const img = document.createElement('img'); img.src = cat.photo;
+      av.appendChild(img);
+    } else { av.textContent = '🐱'; }
+
+    const info = document.createElement('div');
+    info.className = 'cat-card-info';
+    const age = cat.birthday ? ` · ${Utils.calcAge(cat.birthday)}` : '';
+    const gender = cat.gender ? `${cat.gender}` : '';
+    info.innerHTML = `
+      <div class="cat-card-name">${cat.name}</div>
+      <div class="cat-card-meta">
+        ${[gender, cat.birthday ? Utils.fmtDate(cat.birthday) + (age ? ' (' + age + ')' : '') : ''].filter(Boolean).join(' ')}
+        ${cat.chip ? '<br>晶片：' + cat.chip : ''}
+        ${cat.note ? '<br>' + cat.note : ''}
+      </div>
+      <div class="cat-card-actions">
+        <button class="btn btn-secondary btn-sm">編輯</button>
+        <button class="btn btn-secondary btn-sm">提醒</button>
+        <button class="btn btn-danger btn-sm">刪除</button>
+      </div>`;
+
+    info.querySelector('.cat-card-actions button:nth-child(1)').addEventListener('click', () => openEdit(cat));
+    info.querySelector('.cat-card-actions button:nth-child(2)').addEventListener('click', () => Reminders.openFor(cat));
+    info.querySelector('.cat-card-actions button:nth-child(3)').addEventListener('click', () => {
+      Confirm.show({ title: `刪除 ${cat.name}？`, msg: '貓咪的所有紀錄也將一併刪除。', icon: 'heart-crack', cb: async () => {
+        await DB.del('cats', cat.id);
+        // Delete associated records, weights, reminders
+        const rs = await DB.getByIndex('records','catId', cat.id);
+        const ws = await DB.getByIndex('weights','catId', cat.id);
+        for (const r of rs) await DB.del('records', r.id);
+        for (const w of ws) await DB.del('weights', w.id);
+        await DB.del('reminders', cat.id);
+        Toast.show(`${cat.name} 已刪除`, 'success');
+        await State.loadCats();
+        render();
+      }});
+    });
+
+    card.appendChild(av);
+    card.appendChild(info);
+    return card;
+  }
+
+  function openNew() {
+    document.getElementById('modal-cat-title').textContent = '新增貓咪';
+    document.getElementById('cat-edit-id').value = '';
+    document.getElementById('cat-name').value = '';
+    document.getElementById('cat-gender').value = '';
+    document.getElementById('cat-birthday').value = '';
+    document.getElementById('cat-chip').value = '';
+    document.getElementById('cat-weight').value = '';
+    document.getElementById('cat-note').value = '';
+    _photoData = null;
+    const pu = document.getElementById('cat-photo-upload');
+    pu.innerHTML = `<span class="photo-upload-icon">🐱</span>
+      <span class="photo-upload-text">點擊上傳照片</span>
+      <input type="file" id="cat-photo-input" accept="image/*">`;
+    pu.querySelector('input').addEventListener('change', handlePhotoChange);
+    Modal.open('modal-cat');
+  }
+
+  function openEdit(cat) {
+    document.getElementById('modal-cat-title').textContent = '編輯貓咪';
+    document.getElementById('cat-edit-id').value = cat.id;
+    document.getElementById('cat-name').value = cat.name || '';
+    document.getElementById('cat-gender').value = cat.gender || '';
+    document.getElementById('cat-birthday').value = cat.birthday || '';
+    document.getElementById('cat-chip').value = cat.chip || '';
+    document.getElementById('cat-weight').value = '';
+    document.getElementById('cat-note').value = cat.note || '';
+    _photoData = cat.photo || null;
+
+    const pu = document.getElementById('cat-photo-upload');
+    if (cat.photo) {
+      pu.innerHTML = `<img src="${cat.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+        <input type="file" id="cat-photo-input" accept="image/*">`;
+    } else {
+      pu.innerHTML = `<span class="photo-upload-icon">🐱</span>
+        <span class="photo-upload-text">點擊上傳照片</span>
+        <input type="file" id="cat-photo-input" accept="image/*">`;
+    }
+    pu.querySelector('input').addEventListener('change', handlePhotoChange);
+    Modal.open('modal-cat');
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    _photoData = await Utils.compressImage(file);
+    const pu = document.getElementById('cat-photo-upload');
+    pu.innerHTML = `<img src="${_photoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+      <input type="file" id="cat-photo-input" accept="image/*">`;
+    pu.querySelector('input').addEventListener('change', handlePhotoChange);
+  }
+
+  document.getElementById('cat-photo-upload').addEventListener('click', function() {
+    const inp = this.querySelector('input[type=file]');
+    if (inp) inp.click();
+  });
+  document.getElementById('cat-photo-upload').querySelector('input').addEventListener('change', handlePhotoChange);
+
+  document.getElementById('btn-save-cat').addEventListener('click', async () => {
+    const name = document.getElementById('cat-name').value.trim();
+    if (!name) { Toast.show('請輸入貓咪名字', 'error'); return; }
+
+    const idVal = document.getElementById('cat-edit-id').value;
+    const cat = {
+      name,
+      gender:   document.getElementById('cat-gender').value,
+      birthday: document.getElementById('cat-birthday').value,
+      chip:     document.getElementById('cat-chip').value.trim(),
+      note:     document.getElementById('cat-note').value.trim(),
+      photo:    _photoData,
+      createdAt: Date.now(),
+    };
+    if (idVal) cat.id = parseInt(idVal);
+
+    const savedId = await DB.put('cats', cat);
+
+    // If initial weight provided, add weight record
+    const wt = parseFloat(document.getElementById('cat-weight').value);
+    if (wt > 0 && !idVal) {
+      await DB.put('weights', {
+        catId: savedId, weight: wt,
+        date: Utils.today(), time: Utils.nowTime(),
+        note: '初始體重'
+      });
+    }
+
+    Modal.close('modal-cat');
+    Toast.show(idVal ? '已更新' : '已新增貓咪', 'success');
+    await State.loadCats();
+    render();
+  });
+
+  document.getElementById('btn-add-cat').addEventListener('click', openNew);
+
+  return { refresh, openNew, openEdit };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: REMINDERS
+───────────────────────────────────────── */
+const Reminders = (() => {
+  async function openFor(cat) {
+    const r = await DB.get('reminders', cat.id) || { catId: cat.id };
+    document.getElementById('modal-reminder-title').textContent = `${cat.name} 的提醒設定`;
+    document.getElementById('reminder-cat-id').value = cat.id;
+    document.getElementById('remind-feed').value         = r.feedTime    || '';
+    document.getElementById('remind-med').value          = r.medTime     || '';
+    document.getElementById('remind-nail').value         = r.nailCycle   || '';
+    document.getElementById('remind-nail-last').value    = r.nailLast    || '';
+    document.getElementById('remind-deworm').value       = r.dewormCycle || '';
+    document.getElementById('remind-deworm-last').value  = r.dewormLast  || '';
+    document.getElementById('remind-vet').value          = r.vetDate     || '';
+    Modal.open('modal-reminder');
+  }
+
+  document.getElementById('btn-save-reminder').addEventListener('click', async () => {
+    const catId = parseInt(document.getElementById('reminder-cat-id').value);
+    const r = {
+      catId,
+      feedTime:    document.getElementById('remind-feed').value,
+      medTime:     document.getElementById('remind-med').value,
+      nailCycle:   parseInt(document.getElementById('remind-nail').value)   || null,
+      nailLast:    document.getElementById('remind-nail-last').value,
+      dewormCycle: parseInt(document.getElementById('remind-deworm').value) || null,
+      dewormLast:  document.getElementById('remind-deworm-last').value,
+      vetDate:     document.getElementById('remind-vet').value,
+    };
+    await DB.put('reminders', r);
+    Modal.close('modal-reminder');
+    Toast.show('提醒已儲存', 'success');
+    await State.loadCats();
+    Home.refresh();
+  });
+
+  return { openFor };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: WEIGHT
+───────────────────────────────────────── */
+const Weight = (() => {
+  let _selCatId = null;
+
+  function renderCatSwitcher() {
+    const wrap = document.getElementById('weight-cat-switcher');
+    wrap.innerHTML = '';
+    const cats = State.getCats();
+    if (!cats.length) return;
+    if (!_selCatId) _selCatId = cats[0]?.id;
+
+    cats.forEach(cat => {
+      const chip = document.createElement('div');
+      chip.className = `cat-chip${_selCatId === cat.id ? ' active' : ''}`;
+      const av = document.createElement('div');
+      av.className = 'chip-av';
+      if (cat.photo) { const img = document.createElement('img'); img.src = cat.photo; av.appendChild(img); }
+      else av.textContent = '🐱';
+      chip.appendChild(av);
+      chip.appendChild(document.createTextNode(cat.name));
+      chip.addEventListener('click', () => { _selCatId = cat.id; renderCatSwitcher(); renderList(); });
+      wrap.appendChild(chip);
+    });
+  }
+
+  async function renderList() {
+    const listEl = document.getElementById('weight-list');
+    listEl.innerHTML = '';
+    if (!_selCatId) return;
+    const weights = (await DB.getByIndex('weights','catId',_selCatId))
+      .sort((a,b) => b.date.localeCompare(a.date) || (b.time||'').localeCompare(a.time||''));
+
+    if (!weights.length) {
+      listEl.innerHTML = `<div class="empty-state" style="padding:16px 0;">
+        <div class="empty-icon"><i data-lucide="scale"></i></div>
+        <div class="empty-title">尚無體重紀錄</div></div>`;
+      if (window.lucide) lucide.createIcons({ nodes: [listEl] });
+      return;
+    }
+
+    const listWrap = document.createElement('div');
+    listWrap.className = 'weight-list';
+    weights.forEach((w, i) => {
+      const prev = weights[i + 1];
+      let diffHtml = '';
+      if (prev) {
+        const diff = (parseFloat(w.weight) - parseFloat(prev.weight)).toFixed(2);
+        const cls  = parseFloat(diff) > 0 ? 'up' : parseFloat(diff) < 0 ? 'dn' : 'eq';
+        diffHtml = `<span class="weight-diff ${cls}">${parseFloat(diff) > 0 ? '+' : ''}${diff} kg</span>`;
+      }
+      const item = document.createElement('div');
+      item.className = 'weight-item';
+      item.innerHTML = `
+        <span class="weight-date">${Utils.fmtDate(w.date)} ${w.time || ''}</span>
+        <span class="weight-val">${w.weight} kg</span>
+        ${diffHtml}
+        <div style="display:flex;gap:6px;margin-left:4px;">
+          <button class="tl-btn edit" style="font-size:.7rem;">編輯</button>
+          <button class="tl-btn del" style="font-size:.7rem;">刪除</button>
+        </div>`;
+      item.querySelector('.edit').addEventListener('click', () => openEdit(w));
+      item.querySelector('.del').addEventListener('click', () => {
+        Confirm.show({ cb: async () => {
+          await DB.del('weights', w.id);
+          Toast.show('已刪除', 'success');
+          renderList();
+        }});
+      });
+      listWrap.appendChild(item);
+    });
+    listEl.appendChild(listWrap);
+  }
+
+  function openNew() {
+    document.getElementById('modal-weight-title').textContent = '新增體重';
+    document.getElementById('weight-edit-id').value = '';
+    // populate cat select
+    const sel = document.getElementById('weight-cat');
+    sel.innerHTML = '';
+    State.getCats().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id; opt.textContent = cat.name;
+      if (cat.id === _selCatId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById('weight-date').value = Utils.today();
+    document.getElementById('weight-time').value = Utils.nowTime();
+    document.getElementById('weight-val').value  = '';
+    document.getElementById('weight-note').value = '';
+    Modal.open('modal-weight');
+  }
+
+  function openEdit(w) {
+    document.getElementById('modal-weight-title').textContent = '編輯體重';
+    document.getElementById('weight-edit-id').value = w.id;
+    const sel = document.getElementById('weight-cat');
+    sel.innerHTML = '';
+    State.getCats().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id; opt.textContent = cat.name;
+      if (cat.id === w.catId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById('weight-date').value = w.date;
+    document.getElementById('weight-time').value = w.time || '';
+    document.getElementById('weight-val').value  = w.weight;
+    document.getElementById('weight-note').value = w.note || '';
+    Modal.open('modal-weight');
+  }
+
+  document.getElementById('btn-save-weight').addEventListener('click', async () => {
+    const idVal = document.getElementById('weight-edit-id').value;
+    const catId = parseInt(document.getElementById('weight-cat').value);
+    const date  = document.getElementById('weight-date').value;
+    const time  = document.getElementById('weight-time').value;
+    const weight = parseFloat(document.getElementById('weight-val').value);
+    const note  = document.getElementById('weight-note').value.trim();
+    if (!catId || !date || isNaN(weight) || weight <= 0) {
+      Toast.show('請填寫必填欄位', 'error'); return;
+    }
+    const rec = { catId, date, time, weight, note, createdAt: Date.now() };
+    if (idVal) rec.id = parseInt(idVal);
+    await DB.put('weights', rec);
+    Modal.close('modal-weight');
+    Toast.show('體重已儲存', 'success');
+    _selCatId = catId;
+    renderCatSwitcher();
+    renderList();
+  });
+
+  document.getElementById('btn-add-weight').addEventListener('click', () => {
+    if (!State.getCats().length) { Toast.show('請先新增貓咪', 'error'); return; }
+    openNew();
+  });
+
+  async function init() {
+    await State.loadCats();
+    renderCatSwitcher();
+    await renderList();
+  }
+
+  return { init, renderCatSwitcher, renderList };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: SETTINGS
+───────────────────────────────────────── */
+const Settings = (() => {
+  async function refresh() {
+    await State.loadCats();
+    Weight.renderCatSwitcher();
+    Weight.renderList();
+    renderReminderSettings();
+    renderSearchTypePills();
+  }
+
+  function renderReminderSettings() {
+    const list = document.getElementById('reminder-settings-list');
+    list.innerHTML = '';
+    const cats = State.getCats();
+    if (!cats.length) {
+      list.innerHTML = `<div class="setting-item"><div class="setting-text"><div class="setting-desc">尚未新增貓咪</div></div></div>`;
+      return;
+    }
+    cats.forEach(cat => {
+      const item = document.createElement('div');
+      item.className = 'setting-item';
+      const av = State.avatarEl(cat, 56, true);
+      av.style.borderRadius = '50%';
+      const text = document.createElement('div');
+      text.className = 'setting-text';
+      text.innerHTML = `<div class="setting-title">${cat.name}</div><div class="setting-desc">設定餵飯、吃藥、剪指甲等提醒</div>`;
+      item.appendChild(av);
+      item.appendChild(text);
+      const arr = document.createElement('span');
+      arr.className = 'setting-arrow';
+      arr.innerHTML = '<i data-lucide="chevron-right"></i>';
+      item.appendChild(arr);
+      item.addEventListener('click', () => Reminders.openFor(cat));
+      list.appendChild(item);
+      if (window.lucide) lucide.createIcons({ nodes: [item] });
+    });
+  }
+
+  function renderSearchTypePills() {
+    const wrap = document.getElementById('search-type-pills');
+    wrap.innerHTML = '';
+    const all = document.createElement('div');
+    all.className = 'filter-pill active';
+    all.textContent = '全部';
+    all.dataset.type = '';
+    wrap.appendChild(all);
+    RECORD_TYPES.forEach(t => {
+      const p = document.createElement('div');
+      p.className = 'filter-pill';
+      p.textContent = t; p.dataset.type = t;
+      wrap.appendChild(p);
+    });
+    wrap.querySelectorAll('.filter-pill').forEach(p => {
+      p.addEventListener('click', () => {
+        wrap.querySelectorAll('.filter-pill').forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+      });
+    });
+  }
+
+  document.getElementById('btn-search').addEventListener('click', async () => {
+    const from    = document.getElementById('search-date-from').value;
+    const to      = document.getElementById('search-date-to').value;
+    const keyword = document.getElementById('search-keyword').value.trim().toLowerCase();
+    const typeEl  = document.querySelector('#search-type-pills .filter-pill.active');
+    const type    = typeEl ? typeEl.dataset.type : '';
+
+    let records;
+    try {
+      if (from && to) {
+        records = await DB.getRange('records','date', from, to);
+      } else if (from) {
+        records = await DB.getRange('records','date', from, Utils.today());
+      } else {
+        records = await DB.getAll('records');
+      }
+    } catch(e) { records = await DB.getAll('records'); }
+
+    if (type) records = records.filter(r => r.type === type);
+    if (keyword) records = records.filter(r =>
+      r.type.includes(keyword) || (r.note||'').toLowerCase().includes(keyword) ||
+      (State.getCatById(r.catId)?.name||'').toLowerCase().includes(keyword));
+
+    records.sort((a,b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+
+    const resultsEl = document.getElementById('search-results');
+    resultsEl.innerHTML = '';
+    if (!records.length) {
+      resultsEl.innerHTML = `<div class="card"><div class="card-body">
+        <div class="empty-state" style="padding:20px 0;">
+        <div class="empty-icon"><i data-lucide="search-x"></i></div>
+        <div class="empty-title">無符合結果</div></div></div></div>`;
+      if (window.lucide) lucide.createIcons({ nodes: [resultsEl] });
+      return;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="card-header"><span class="card-title">找到 ${records.length} 筆</span></div>`;
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    body.style.paddingTop = '4px';
+
+    records.forEach(rec => {
+      const cat = State.getCatById(rec.catId);
+      const item = document.createElement('div');
+      item.className = 'record-item';
+      item.innerHTML = `
+        <div class="record-type-badge">${rec.type}</div>
+        <div class="record-meta">
+          <div class="record-cat">${cat?.name || '未知'}</div>
+          <div class="record-time">${Utils.fmtDate(rec.date)} ${rec.time}</div>
+          ${rec.note ? `<div class="record-note">${rec.note}</div>` : ''}
+        </div>
+        <div class="record-actions">
+          <button class="tl-btn edit">編輯</button>
+          <button class="tl-btn del">刪除</button>
+        </div>`;
+      item.querySelector('.edit').addEventListener('click', () => Records.openEdit(rec.id));
+      item.querySelector('.del').addEventListener('click', () => {
+        Confirm.show({ cb: async () => {
+          await DB.del('records', rec.id);
+          Toast.show('已刪除', 'success');
+          document.getElementById('btn-search').click();
+        }});
+      });
+      body.appendChild(item);
+    });
+    card.appendChild(body);
+    resultsEl.appendChild(card);
+  });
+
+  return { refresh };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: BACKUP
+───────────────────────────────────────── */
+const Backup = (() => {
+  async function exportAll() {
+    const cats    = await DB.getAll('cats');
+    const records = await DB.getAll('records');
+    const weights = await DB.getAll('weights');
+    const reminders = await DB.getAll('reminders');
+    const data = { version: 1, exportedAt: new Date().toISOString(), cats, records, weights, reminders };
+    Utils.downloadJSON(data, `貓咪紀錄_全部備份_${Utils.today()}.json`);
+    Toast.show('已匯出完整備份', 'success');
+  }
+
+  async function exportRange(from, to) {
+    if (!from || !to) { Toast.show('請選擇日期區間', 'error'); return; }
+    const cats     = await DB.getAll('cats');
+    const reminders = await DB.getAll('reminders');
+    let records = [], weights = [];
+    try { records = await DB.getRange('records','date', from, to); } catch(e) {}
+    try { weights = await DB.getRange('weights','date', from, to); } catch(e) {}
+    Utils.downloadJSON({ version:1, exportedAt: new Date().toISOString(), cats, records, weights, reminders },
+      `貓咪紀錄_${from}_${to}.json`);
+    Toast.show('已匯出', 'success');
+  }
+
+  async function exportMonth(month) {
+    if (!month) { Toast.show('請選擇月份', 'error'); return; }
+    const [y, m] = month.split('-');
+    const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    await exportRange(`${month}-01`, `${month}-${String(lastDay).padStart(2,'0')}`);
+  }
+
+  async function exportByCats(catIds) {
+    if (!catIds.length) { Toast.show('請選擇貓咪', 'error'); return; }
+    const allCats  = await DB.getAll('cats');
+    const cats     = allCats.filter(c => catIds.includes(c.id));
+    const allReminders = await DB.getAll('reminders');
+    const reminders = allReminders.filter(r => catIds.includes(r.catId));
+    let records = [], weights = [];
+    for (const id of catIds) {
+      const rs = await DB.getByIndex('records','catId', id);
+      const ws = await DB.getByIndex('weights','catId', id);
+      records.push(...rs); weights.push(...ws);
+    }
+    Utils.downloadJSON({ version:1, exportedAt: new Date().toISOString(), cats, records, weights, reminders },
+      `貓咪紀錄_${cats.map(c=>c.name).join('_')}.json`);
+    Toast.show('已匯出', 'success');
+  }
+
+  async function restore(data, mode) {
+    if (!data || !data.cats) { Toast.show('無效的備份檔', 'error'); return; }
+
+    if (mode === 'overwrite') {
+      // Clear existing
+      const existing = await DB.getAll('records');
+      for (const r of existing) await DB.del('records', r.id);
+      const ew = await DB.getAll('weights');
+      for (const w of ew) await DB.del('weights', w.id);
+      const ec = await DB.getAll('cats');
+      for (const c of ec) await DB.del('cats', c.id);
+      const er = await DB.getAll('reminders');
+      for (const r of er) await DB.del('reminders', r.catId);
+    }
+
+    // Restore
+    for (const cat of data.cats || []) await DB.put('cats', cat);
+    for (const rec of data.records || []) await DB.put('records', rec);
+    for (const w of data.weights || []) await DB.put('weights', w);
+    for (const r of data.reminders || []) await DB.put('reminders', r);
+
+    Toast.show(`還原完成！新增 ${data.records?.length || 0} 筆紀錄`, 'success');
+    Modal.close('modal-restore');
+    await State.loadCats();
+    Home.refresh();
+  }
+
+  // Wire buttons
+  document.getElementById('btn-backup-all').addEventListener('click', exportAll);
+
+  document.getElementById('btn-backup-range').addEventListener('click', () => {
+    const now = Utils.today();
+    document.getElementById('backup-range-from').value = now.slice(0,8) + '01';
+    document.getElementById('backup-range-to').value   = now;
+    Modal.open('modal-backup-range');
+  });
+  document.getElementById('btn-do-backup-range').addEventListener('click', () => {
+    exportRange(
+      document.getElementById('backup-range-from').value,
+      document.getElementById('backup-range-to').value
+    );
+    Modal.close('modal-backup-range');
+  });
+
+  document.getElementById('btn-backup-month').addEventListener('click', () => {
+    const now = new Date();
+    document.getElementById('backup-month-val').value =
+      `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    Modal.open('modal-backup-month');
+  });
+  document.getElementById('btn-do-backup-month').addEventListener('click', () => {
+    exportMonth(document.getElementById('backup-month-val').value);
+    Modal.close('modal-backup-month');
+  });
+
+  document.getElementById('btn-backup-cat').addEventListener('click', async () => {
+    await State.loadCats();
+    const list = document.getElementById('backup-cat-list');
+    list.innerHTML = '';
+    State.getCats().forEach(cat => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;';
+      label.innerHTML = `<input type="checkbox" value="${cat.id}" style="width:18px;height:18px;accent-color:var(--primary);">
+        <span style="font-size:.9rem;font-weight:600;">${cat.name}</span>`;
+      list.appendChild(label);
+    });
+    Modal.open('modal-backup-cat');
+  });
+  document.getElementById('btn-do-backup-cat').addEventListener('click', () => {
+    const checked = [...document.querySelectorAll('#backup-cat-list input:checked')].map(i => parseInt(i.value));
+    exportByCats(checked);
+    Modal.close('modal-backup-cat');
+  });
+
+  document.getElementById('btn-restore').addEventListener('click', () => {
+    document.getElementById('restore-file').value = '';
+    Modal.open('modal-restore');
+  });
+  document.getElementById('btn-do-restore').addEventListener('click', async () => {
+    const file = document.getElementById('restore-file').files[0];
+    if (!file) { Toast.show('請選擇備份檔', 'error'); return; }
+    const mode = document.getElementById('restore-mode').value;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      await restore(data, mode);
+    } catch(e) { Toast.show('檔案格式錯誤', 'error'); }
+  });
+
+  return { exportAll };
+})();
+
+/* ─────────────────────────────────────────
+   MODULE: MONTHLY PROMPT
+───────────────────────────────────────── */
+const MonthlyPrompt = (() => {
+  async function check() {
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    let lastSeen;
+    try {
+      const m = await DB.get('meta', 'lastMonthSeen');
+      lastSeen = m?.value;
+    } catch(e) {}
+
+    if (lastSeen === thisMonth) return; // Already shown this month
+
+    // Check if previous month has data
+    const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+    const lastDay = new Date(prevDate.getFullYear(), prevDate.getMonth()+1, 0).getDate();
+    const from = `${prevMonth}-01`, to = `${prevMonth}-${String(lastDay).padStart(2,'0')}`;
+
+    let records = [];
+    try { records = await DB.getRange('records','date', from, to); } catch(e) {}
+    if (!records.length) {
+      await DB.put('meta', { key: 'lastMonthSeen', value: thisMonth });
+      return;
+    }
+
+    document.getElementById('monthly-prompt-title').textContent = `${prevDate.getFullYear()}年${prevDate.getMonth()+1}月月報`;
+    document.getElementById('monthly-prompt-text').textContent =
+      `新的一個月開始了！\n${prevDate.getFullYear()}年${prevDate.getMonth()+1}月共有 ${records.length} 筆紀錄，要匯出月報嗎？`;
+
+    await DB.put('meta', { key: 'lastMonthSeen', value: thisMonth });
+    Modal.open('modal-monthly-prompt');
+  }
+
+  document.getElementById('prompt-later').addEventListener('click', () => {
+    Modal.close('modal-monthly-prompt');
+  });
+
+  return { check };
+})();
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+async function init() {
+  try {
+    await DB.open();
+    await State.loadCats();
+    Home.refresh();
+    await MonthlyPrompt.check();
+  } catch(e) {
+    console.error('Init error:', e);
+    Toast.show('初始化失敗，請重新整理頁面', 'error', 5000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+  init();
+});
+
+</script>
+</body>
+</html>
